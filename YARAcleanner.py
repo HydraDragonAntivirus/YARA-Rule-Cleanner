@@ -10,41 +10,40 @@ def comment_out_errors(file_path, error_message):
         lines = f.readlines()
 
     modified_lines = []
-    inside_rule = False
 
-    for line in lines:
-        if inside_rule:
+    # Extract the line number from the error message using regular expression
+    error_match = re.search(r'\((\d+)\)', error_message)
+    error_line = int(error_match.group(1) if error_match else -1)
+
+    for line_number, line in enumerate(lines, start=1):
+        if line_number == error_line:
             modified_lines.append(f'// {line.strip()}')
+            print(f'Processed Line {line_number}: {line.strip()}')
         else:
             modified_lines.append(line)
-
-        if line.strip().startswith("rule"):
-            inside_rule = True
-        if inside_rule and line.strip().endswith("}"):
-            inside_rule = False
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
 
 # Process all ".yara" files in the specified directory
-errors_found = False
+while True:
+    errors_found = False
 
-for root, _, files in os.walk(yara_directory):
-    for file in files:
-        if file.endswith('.yara'):
-            file_path = os.path.join(root, file)
+    for root, _, files in os.walk(yara_directory):
+        for file in files:
+            if file.endswith('.yara'):
+                file_path = os.path.join(root, file)
 
-            # Use YARA Python library to validate the rule file
-            try:
-                rules = yara.compile(filepath=file_path)
-            except yara.SyntaxError as e:
-                error_message = str(e)
-                if "compilation error" in error_message:
+                # Use YARA Python library to validate the rule file
+                try:
+                    rules = yara.compile(filepath=file_path)
+                except yara.SyntaxError as e:
+                    error_message = str(e)
                     comment_out_errors(file_path, error_message)
-                    print(f'Processed: {file_path} - Rule commented out due to error')
+                    print(f'Processed: {file_path} - Error message: {error_message}')
                     errors_found = True
 
-if errors_found:
-    print('YARA rules contain errors and have been processed with comments.')
-else:
-    print('YARA rules processed successfully.')
+    if not errors_found:
+        break
+
+print('YARA rules processed successfully.')
