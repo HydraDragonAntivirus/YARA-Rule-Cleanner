@@ -5,23 +5,28 @@ import re
 # Directory containing YARA rules
 yara_directory = 'YARA'
 
-def comment_out_rule(file_path, is_error_rule):
+def comment_out_error_rule(file_path):
     with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
         lines = f.readlines()
 
     modified_lines = []
     inside_rule = False
+    is_error_rule = False
 
     for line in lines:
         match = re.match(r'(}private\s)?(}rule|rule|private rule)\s+\w+\s*{', line)
         if match:
             inside_rule = not match.group(1)  # Set inside_rule based on the presence of "}private"
+            is_error_rule = False  # Reset the error flag for each rule
         if inside_rule:
             if is_error_rule:
                 line = f'// {line}'  # Comment out the line with '//' if it's an error rule
             modified_lines.append(line)
         else:
             modified_lines.append(line)
+
+        if 'syntax error' in line:
+            is_error_rule = True
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
@@ -70,11 +75,11 @@ while True:
                             missing_identifier = match.group(1)
                             add_import(file_path, missing_identifier)
                             print(f'Added import statement for "{missing_identifier}"')
-                            continue  # Do not comment out the entire rule for undefined identifiers
+                        continue  # Do not comment out the entire rule for undefined identifiers
 
                     is_syntax_error = "syntax error" in error_message
                     if is_syntax_error:
-                        rule_name = comment_out_rule(file_path, is_syntax_error)
+                        comment_out_error_rule(file_path)
                         errors_found = True
 
     if not errors_found:
