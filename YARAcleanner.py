@@ -22,7 +22,7 @@ def comment_out_error_rule(file_path, error_lines):
             current_rule = []  # Reset current_rule for each rule
         if inside_rule:
             current_rule.append(line)
-            if 'syntax error' in line:
+            if 'syntax error' in line or 'undefined identifier' in line:
                 is_error_rule = True
             if is_error_rule:
                 current_rule[-1] = f'// {current_rule[-1]}'  # Comment out the line with '//'
@@ -82,6 +82,14 @@ def process_yara_files(directory):
                                 missing_identifier = match.group(1)
                                 add_import(file_path, missing_identifier)
                                 print(f'Added import statement for "{missing_identifier}"')
+                                # Retry compilation
+                                try:
+                                    yara.compile(filepath=file_path)
+                                except Exception as e:
+                                    error_message = str(e)
+                                    if "undefined identifier" in error_message:
+                                        error_lines = comment_out_error_rule(file_path, error_lines)
+                                        errors_found = True
                             continue  # Do not comment out the entire rule for undefined identifiers
 
                         is_syntax_error = "syntax error" in error_message
