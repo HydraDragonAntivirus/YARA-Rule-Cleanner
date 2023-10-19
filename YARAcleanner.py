@@ -24,10 +24,9 @@ def comment_out_error_rule(file_path, error_lines):
             if 'syntax error' in line:
                 is_error_rule = True
                 error_lines.extend(current_rule)  # Collect lines of the current rule with syntax error
-            current_rule.append(line)
-            if is_error_rule:
-                line = f'// {line}'  # Comment out the line with '//' if it's an error rule
-            modified_lines.append(line)
+                current_rule.append(f'// {line.strip()}\n')  # Comment out the line with '//'
+            else:
+                current_rule.append(line)
         else:
             modified_lines.append(line)
 
