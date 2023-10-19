@@ -56,5 +56,25 @@ def process_yara_files(directory):
 
     print('YARA rules processed successfully.')
 
-if __name__ == "__main__":
-    process_yara_files(yara_directory)
+# Process all ".yara" files in the specified directory
+while True:
+    errors_found = False
+
+    for root, _, files in os.walk(yara_directory):
+        for file in files:
+            if file.endswith('.yara'):
+                file_path = os.path.join(root, file)
+
+                # Use YARA Python library to validate the rule file
+                try:
+                    rules = yara.compile(filepath=file_path)
+                except yara.SyntaxError as e:
+                    error_message = str(e)
+                    comment_out_error_rule(file_path, error_message)
+                    print(f'Processed: {file_path} - Error message: {error_message}')
+                    errors_found = True
+
+    if not errors_found:
+        break
+
+print('YARA rules processed successfully.')
