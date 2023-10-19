@@ -52,7 +52,7 @@ def add_import(file_path, missing_identifier):
         modified_lines.insert(0, f'import "{missing_identifier}"\n')
 
     with open(file_path, 'w', encoding='utf-8') as f:
-        f.writelines(modified_lines
+        f.writelines(modified_lines)
 
 # Process all ".yara" files in the specified directory
 def process_yara_files(directory):
