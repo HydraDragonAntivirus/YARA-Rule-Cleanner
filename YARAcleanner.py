@@ -39,7 +39,7 @@ def add_import(file_path, missing_identifier):
             # The import statement already exists
             return
 
-    # If the missing identifier import is not found, add it to the beginning of the rule
+    # If the missing identifier import is not found, add it at the top of the rule
     modified_lines.insert(0, f'import {missing_identifier}\n')
 
     with open(file_path, 'w', encoding='utf-8') as f:
