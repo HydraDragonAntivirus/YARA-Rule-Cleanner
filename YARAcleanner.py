@@ -33,13 +33,13 @@ def comment_out_errors(file_path, error_message):
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
 
-# Process all ".yara" files in the specified directory
+# Process all ".yar" files in the specified directory
 while True:
     errors_found = False
 
     for root, _, files in os.walk(yara_directory):
         for file in files:
-            if file.endswith('.yara'):
+            if file.endswith('.yar'):
                 file_path = os.path.join(root, file)
 
                 # Use YARA Python library to validate the rule file
