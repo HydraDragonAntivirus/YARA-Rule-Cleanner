@@ -12,7 +12,9 @@ def comment_out_rule(file_path):
     modified_lines = []
 
     for line in lines:
-        modified_lines.append(f'// {line}')
+        if not line.strip().startswith('//'):
+            line = f'// {line}'  # Add // only if the line doesn't already start with //
+        modified_lines.append(line)
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
