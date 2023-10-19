@@ -12,22 +12,20 @@ def comment_out_error_rule(file_path, error_lines):
     modified_lines = []
     inside_rule = False
     is_error_rule = False
-    current_rule = []
 
     for line in lines:
         match = re.match(r'(}private\s)?(}rule|rule|private rule)\s+\w+\s*{', line)
         if match:
             inside_rule = not match.group(1)
             is_error_rule = False
-            current_rule = []  # Reset current_rule for each rule
+
         if inside_rule:
-            current_rule.append(line)
             if 'syntax error' in line:
                 is_error_rule = True
-            if is_error_rule:
-                continue  # Skip the entire rule with syntax error
-        else:
-            modified_lines.append(line)
+                line = f'// {line}'  # Comment out the line with '//'
+                error_lines.append(line)  # Collect lines of the current rule with syntax error
+
+        modified_lines.append(line)
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
