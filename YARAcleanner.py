@@ -49,5 +49,3 @@ for root, _, files in os.walk(yara_directory):
 
 if errors_found:
     print('YARA rules contain errors and have been processed with comments.')
-else:
-    print('YARA rules processed successfully.')
