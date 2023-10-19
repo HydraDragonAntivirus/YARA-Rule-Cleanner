@@ -1,6 +1,5 @@
 import os
 import yara
-import re
 
 # Directory containing YARA rules
 yara_directory = 'YARA'
