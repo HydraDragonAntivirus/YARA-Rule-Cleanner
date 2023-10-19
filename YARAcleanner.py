@@ -86,6 +86,7 @@ def process_yara_files(directory):
 
                         is_syntax_error = "syntax error" in error_message
                         if is_syntax_error:
+                            add_import(file_path, "non_existing_identifier")
                             error_lines = comment_out_error_rule(file_path, error_lines)
                             errors_found = True
 
