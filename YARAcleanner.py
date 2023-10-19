@@ -29,12 +29,22 @@ def comment_out_rule(file_path, is_error_rule):
 
 def add_import(file_path, missing_identifier):
     with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
-        content = f.read()
+        lines = f.readlines()
+
+    modified_lines = []
+
+    import_added = False  # Flag to track whether an import has been added
+
+    for line in lines:
+        modified_lines.append(line)
+        if line.strip() == f'import "{missing_identifier}"':
+            import_added = True
+
+    if not import_added:
+        modified_lines.insert(0, f'import "{missing_identifier}"\n')
 
     with open(file_path, 'w', encoding='utf-8') as f:
-        # Add the missing import statement to the beginning of the file
-        f.write(f'import {missing_identifier}\n\n')
-        f.write(content)
+        f.writelines(modified_lines)
 
 # Process all ".yara" files in the specified directory
 while True:
@@ -56,11 +66,11 @@ while True:
                     # Check if it's an "undefined identifier" error
                     if "undefined identifier" in error_message:
                         # Try to extract the missing identifier
-                        match = re.search(r"undefined identifier (\w+)", error_message)
+                        match = re.search(r'undefined identifier "(\w+)"', error_message)
                         if match:
                             missing_identifier = match.group(1)
                             add_import(file_path, missing_identifier)
-                            print(f'Added import statement for: {missing_identifier}')
+                            print(f'Added import statement for: "{missing_identifier}"')
                         continue  # Do not comment out the entire rule for undefined identifiers
 
                     is_syntax_error = "syntax error" in error_message
