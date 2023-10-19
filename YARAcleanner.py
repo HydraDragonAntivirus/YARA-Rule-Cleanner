@@ -5,22 +5,29 @@ import re
 # Directory containing YARA rules
 yara_directory = 'YARA'
 
-def comment_out_errors(file_path, error_message):
+def comment_out_private_or_rule(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
     modified_lines = []
 
-    # Extract the line number from the error message using regular expression
-    error_match = re.search(r'\((\d+)\)', error_message)
-    error_line = int(error_match.group(1) if error_match else -1)
+    inside_rule = False
 
-    for line_number, line in enumerate(lines, start=1):
-        if line_number == error_line:
+    for line in lines:
+        if (
+            line.strip().startswith("private rule")
+            or line.strip().startswith("rule")
+            or line.strip().startswith("}private rule")
+            or line.strip().startswith("}rule")
+        ):
+            inside_rule = True
+        if inside_rule:
             modified_lines.append(f'// {line.strip()}')
-            print(f'Processed Line {line_number}: {line.strip()}')
         else:
             modified_lines.append(line)
+
+        if inside_rule and line.strip() == "}":
+            inside_rule = False
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
@@ -38,9 +45,8 @@ while True:
                 try:
                     rules = yara.compile(filepath=file_path)
                 except yara.SyntaxError as e:
-                    error_message = str(e)
-                    comment_out_errors(file_path, error_message)
-                    print(f'Processed: {file_path} - Error message: {error_message}')
+                    comment_out_private_or_rule(file_path)
+                    print(f'Processed: {file_path} - Rule commented out due to error')
                     errors_found = True
 
     if not errors_found:
