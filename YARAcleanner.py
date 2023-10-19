@@ -18,9 +18,8 @@ def comment_out_rule(file_path, is_error_rule):
             inside_rule = not match.group(1)  # Set inside_rule based on the presence of "}private"
         if inside_rule:
             if is_error_rule:
-                modified_lines.append(f'// {line}')
-            else:
-                modified_lines.append(line)
+                line = f'// {line}'  # Comment out the line with '//' if it's an error rule
+            modified_lines.append(line)
         else:
             modified_lines.append(line)
 
@@ -70,8 +69,8 @@ while True:
                         if match:
                             missing_identifier = match.group(1)
                             add_import(file_path, missing_identifier)
-                            print(f'Added import statement for: "{missing_identifier}"')
-                        continue  # Do not comment out the entire rule for undefined identifiers
+                            print(f'Added import statement for "{missing_identifier}"')
+                            continue  # Do not comment out the entire rule for undefined identifiers
 
                     is_syntax_error = "syntax error" in error_message
                     if is_syntax_error:
