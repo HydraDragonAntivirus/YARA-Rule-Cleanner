@@ -29,21 +29,12 @@ def comment_out_rule(file_path, is_error_rule):
 
 def add_import(file_path, missing_identifier):
     with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
-        lines = f.readlines()
-
-    modified_lines = []
-
-    for line in lines:
-        modified_lines.append(line)
-        if line.strip().startswith('import ' + missing_identifier):
-            # The import statement already exists
-            return
-
-    # If the missing identifier import is not found, add it at the top of the rule
-    modified_lines.insert(0, f'import {missing_identifier}\n')
+        content = f.read()
 
     with open(file_path, 'w', encoding='utf-8') as f:
-        f.writelines(modified_lines)
+        # Add the missing import statement to the beginning of the file
+        f.write(f'import {missing_identifier}\n\n')
+        f.write(content)
 
 # Process all ".yara" files in the specified directory
 while True:
