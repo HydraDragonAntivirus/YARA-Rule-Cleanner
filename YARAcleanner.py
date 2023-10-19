@@ -12,32 +12,40 @@ def comment_out_error_rule(file_path):
     modified_lines = []
     inside_rule = False
     is_error_rule = False
+    error_lines = []  # Store lines causing syntax errors
 
     for line in lines:
         match = re.match(r'(}private\s)?(}rule|rule|private rule)\s+\w+\s*{', line)
         if match:
-            inside_rule = not match.group(1)  # Set inside_rule based on the presence of "}private"
-            is_error_rule = False  # Reset the error flag for each rule
+            inside_rule = not match.group(1)
+            is_error_rule = False
+            error_lines = []  # Reset error lines for each rule
         if inside_rule:
-            if is_error_rule:
-                line = f'// {line}'  # Comment out the line with '//' if it's an error rule
-            modified_lines.append(line)
+            if 'syntax error' in line:
+                is_error_rule = True
+                error_lines.append(line)
+            elif is_error_rule:
+                error_lines.append(line)
+            else:
+                modified_lines.append(line)
         else:
             modified_lines.append(line)
 
-        if 'syntax error' in line:
-            is_error_rule = True
-
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
+
+    # Add comments to the error lines
+    if error_lines:
+        with open(file_path, 'a', encoding='utf-8') as f:
+            f.write("\n// Syntax error: The following lines have syntax errors\n")
+            f.writelines(error_lines)
 
 def add_import(file_path, missing_identifier):
     with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
         lines = f.readlines()
 
     modified_lines = []
-
-    import_added = False  # Flag to track whether an import has been added
+    import_added = False
 
     for line in lines:
         modified_lines.append(line)
@@ -48,7 +56,7 @@ def add_import(file_path, missing_identifier):
         modified_lines.insert(0, f'import "{missing_identifier}"\n')
 
     with open(file_path, 'w', encoding='utf-8') as f:
-        f.writelines(modified_lines)
+        f.writelines(modified_lines
 
 # Process all ".yara" files in the specified directory
 while True:
