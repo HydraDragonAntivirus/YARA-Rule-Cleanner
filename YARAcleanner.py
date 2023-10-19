@@ -10,15 +10,14 @@ def comment_out_errors(file_path, error_message):
         lines = f.readlines()
 
     modified_lines = []
+    inside_rule = False
 
-    # Extract the line number from the error message using regular expression
-    error_match = re.search(r'\((\d+)\)', error_message)
-    error_line = int(error_match.group(1) if error_match else -1)
-
-    for line_number, line in enumerate(lines, start=1):
-        if line_number == error_line:
-            modified_lines.append(f'// {line.strip()}')
-            print(f'Processed Line {line_number}: {line.strip()}')
+    for line in lines:
+        match = re.match(r'(}private\s)?(}rule|rule|private rule)\s+\w+\s*{', line)
+        if match:
+            inside_rule = not match.group(1)  # Set inside_rule based on the presence of "}private"
+        if inside_rule:
+            modified_lines.append(f'// {line}')
         else:
             modified_lines.append(line)
 
