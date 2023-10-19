@@ -1,60 +1,49 @@
 import os
 import yara
+import re
 
 # Directory containing YARA rules
 yara_directory = 'YARA'
 
-def comment_out_error_rule(file_path, error_lines):
-    with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+def comment_out_errors(file_path, error_message):
+    with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
     modified_lines = []
-    inside_rule = False
-    is_error_rule = False
 
-    for line in lines:
-        if re.match(r'(}private\s)?(}rule|rule|private rule)\s+\w+\s*{', line):
-            inside_rule = True
-            is_error_rule = False
-        if inside_rule:
-            if 'syntax error' in line or 'undefined identifier' in line:
-                is_error_rule = True
-            if is_error_rule:
-                line = f'// {line}'  # Comment out the line with '//'
-            modified_lines.append(line)
+    # Extract the line number from the error message using regular expression
+    error_match = re.search(r'\((\d+)\)', error_message)
+    error_line = int(error_match.group(1) if error_match else -1)
+
+    for line_number, line in enumerate(lines, start=1):
+        if line_number == error_line:
+            modified_lines.append(f'// {line.strip()}')
+            print(f'Processed Line {line_number}: {line.strip()}')
         else:
             modified_lines.append(line)
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
 
-    return error_lines
-
 # Process all ".yara" files in the specified directory
-def process_yara_files(directory):
-    errors_found = True
-    error_lines = []
+while True:
+    errors_found = False
 
-    while errors_found:
-        errors_found = False
+    for root, _, files in os.walk(yara_directory):
+        for file in files:
+            if file.endswith('.yara'):
+                file_path = os.path.join(root, file)
 
-        for root, _, files in os.walk(directory):
-            for file in files:
-                if file.endswith('.yara'):
-                    file_path = os.path.join(root, file)
+                # Use YARA Python library to validate the rule file
+                try:
+                    rules = yara.compile(filepath=file_path)
+                except yara.SyntaxError as e:
+                    error_message = str(e)
+                    comment_out_errors(file_path, error_message)
+                    print(f'Processed: {file_path} - Error message: {error_message}')
+                    errors_found = True
 
-                    try:
-                        rules = yara.compile(filepath=file_path)
-                    except Exception as e:
-                        error_message = str(e)
-                        print(f'Processed: {file_path} - Error message: {error_message}')
+    if not errors_found:
+        break
 
-                        is_syntax_error = "syntax error" in error_message
-                        if is_syntax_error:
-                            error_lines = comment_out_error_rule(file_path, error_lines)
-                            errors_found = True
-
-    print('YARA rules processed successfully.')
-
-if __name__ == "__main__":
-    process_yara_files(yara_directory)
+print('YARA rules processed successfully.')
