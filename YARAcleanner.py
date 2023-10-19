@@ -32,23 +32,22 @@ def comment_out_private_or_rule(file_path):
         f.writelines(modified_lines)
 
 # Process all ".yara" files in the specified directory
-while True:
-    errors_found = False
+errors_found = False
 
-    for root, _, files in os.walk(yara_directory):
-        for file in files:
-            if file.endswith('.yara'):
-                file_path = os.path.join(root, file)
+for root, _, files in os.walk(yara_directory):
+    for file in files:
+        if file.endswith('.yara'):
+            file_path = os.path.join(root, file)
 
-                # Use YARA Python library to validate the rule file
-                try:
-                    rules = yara.compile(filepath=file_path)
-                except yara.SyntaxError as e:
-                    comment_out_private_or_rule(file_path)
-                    print(f'Processed: {file_path} - Rule commented out due to error')
-                    errors_found = True
+            # Use YARA Python library to validate the rule file
+            try:
+                rules = yara.compile(filepath=file_path)
+            except yara.SyntaxError as e:
+                comment_out_private_or_rule(file_path)
+                print(f'Processed: {file_path} - Rule commented out due to error')
+                errors_found = True
 
-    if not errors_found:
-        break
-
-print('YARA rules processed successfully.')
+if errors_found:
+    print('YARA rules contain errors and have been processed with comments.')
+else:
+    print('YARA rules processed successfully.')
