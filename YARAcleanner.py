@@ -18,19 +18,20 @@ def comment_out_errors(file_path, error_message):
     inside_rule = False
 
     for line_number, line in enumerate(lines, start=1):
-        if line_number == error_line:
-            modified_lines.append(f'// {line.strip()}')
-            print(f'Processed Line {line_number}: {line.strip()}')
-        else:
-            modified_lines.append(line)
-
-        # Check if we are inside a YARA rule
         if 'rule ' in line:
             inside_rule = True
+            modified_lines.append(line)  # Include the 'rule' line
 
-        # Check if we've reached the end of the current rule
-        if inside_rule and line.strip() == '}':
+        if inside_rule:
+            modified_lines.append(f'// {line.strip()}')  # Comment out lines within the rule
+
+        if inside_rule and '}' in line:
             inside_rule = False
+
+        # Check if we're at the error line, and set a flag to stop commenting
+        if line_number == error_line:
+            inside_rule = False
+            modified_lines[-1] = f'// {lines[error_line - 1].strip()}'  # Comment out the 'rule' line
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
