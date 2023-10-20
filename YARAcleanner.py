@@ -5,23 +5,24 @@ import re
 # Directory containing YARA rules
 yara_directory = 'YARA'
 
-def comment_out_errors(file_path, error_message):
+def comment_out_rule(file_path, rule_name):
     with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
     modified_lines = []
-    inside_rule = False  # Tracks whether we're inside a rule block
+    in_rule_block = False
 
     for line in lines:
-        if line.strip().startswith('}'):
-            inside_rule = False
+        if line.strip().startswith("rule " + rule_name):
+            in_rule_block = True
+
+        if in_rule_block:
             modified_lines.append(f'// {line.strip()}')
-        elif inside_rule:
-            modified_lines.append(f'// {line.strip()}')
-        elif line.strip().startswith('rule'):
-            inside_rule = True
         else:
             modified_lines.append(line)
+
+        if line.strip() == "}":
+            in_rule_block = False
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
@@ -35,11 +36,18 @@ while True:
             if file.endswith('.yar'):
                 file_path = os.path.join(root, file)
 
+                # Use YARA Python library to validate the rule file
                 try:
                     rules = yara.compile(filepath=file_path)
                 except yara.SyntaxError as e:
                     error_message = str(e)
-                    comment_out_errors(file_path, error_message)
+                    error_match = re.search(r'\((\d+)\)', error_message)
+                    error_line = int(error_match.group(1) if error_match else -1)
+                    
+                    # Extract the rule name
+                    rule_name = re.search(r'rule (\S+)', lines[error_line - 1]).group(1)
+                    
+                    comment_out_rule(file_path, rule_name)
                     print(f'Processed: {file_path} - Error message: {error_message}')
                     errors_found = True
 
