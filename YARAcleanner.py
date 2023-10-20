@@ -56,10 +56,12 @@ def process_yara_rules():
                         if error_line != -1:
                             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                                 lines = f.readlines()
-                            rule_name = re.search(r'rule (\S+)', lines[error_line - 1]).group(1)
-                            comment_out_rule(file_path, rule_name)
-                            print(f'Processed: {file_path} - Error message: {error_message}')
-                            errors_found = True
+                            rule_name_match = re.search(r'rule (\S+)', lines[error_line - 1])
+                            if rule_name_match:
+                                rule_name = rule_name_match.group(1)
+                                comment_out_rule(file_path, rule_name)
+                                print(f'Processed: {file_path} - Error message: {error_message}')
+                                errors_found = True
 
         if not errors_found:
             break
