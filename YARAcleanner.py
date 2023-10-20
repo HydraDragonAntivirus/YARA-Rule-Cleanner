@@ -30,6 +30,12 @@ def comment_out_errors(file_path, error_message):
             else:
                 modified_lines.append(f'// {line.strip()}')
 
+    # Create a backup file with a ".bak" extension
+    backup_file_path = file_path + '.bak'
+    with open(backup_file_path, 'w', encoding='utf-8') as f:
+        f.writelines(lines)
+
+    # Overwrite the original file with the modified content
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
 
