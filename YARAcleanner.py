@@ -1,6 +1,7 @@
 import os
 import yara
 import re
+from multiprocessing import Pool
 
 # Directory containing YARA rules
 yara_directory = 'YARA'
@@ -25,25 +26,33 @@ def comment_out_errors(file_path, error_message):
     with open(file_path, 'w', encoding='ISO-8859-1') as f:
         f.writelines(modified_lines)
 
-# Process all ".yar" files in the specified directory
-while True:
-    errors_found = False
+def process_yara_file(file_path):
+    try:
+        rules = yara.compile(filepath=file_path)
+    except yara.SyntaxError as e:
+        error_message = str(e)
+        comment_out_errors(file_path, error_message)
+        print(f'Processed: {file_path} - Error message: {error_message}')
+        return True
+    return False
 
-    for root, _, files in os.walk(yara_directory):
-        for file in files:
-            if file.endswith('.yar'):
-                file_path = os.path.join(root, file)
+if __name__ == "__main__":
+    while True:
+        errors_found = False
+        pool = Pool(processes=os.cpu_count())  # Use as many processes as CPU cores
 
-                # Use YARA Python library to validate the rule file
-                try:
-                    rules = yara.compile(filepath=file_path)
-                except yara.SyntaxError as e:
-                    error_message = str(e)
-                    comment_out_errors(file_path, error_message)
-                    print(f'Processed: {file_path} - Error message: {error_message}')
-                    errors_found = True
+        for root, _, files in os.walk(yara_directory):
+            for file in files:
+                if file.endswith('.yar'):
+                    file_path = os.path.join(root, file)
+                    result = pool.apply_async(process_yara_file, (file_path,))
+                    if result.get():
+                        errors_found = True
 
-    if not errors_found:
-        break
+        pool.close()
+        pool.join()
 
-print('YARA rules processed successfully.')
+        if not errors_found:
+            break
+
+    print('YARA rules processed successfully.')
