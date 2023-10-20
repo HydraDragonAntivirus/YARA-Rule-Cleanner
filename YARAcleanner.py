@@ -6,36 +6,23 @@ import re
 yara_directory = 'YARA'
 
 def comment_out_errors(file_path, error_message):
-    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
     modified_lines = []
-    error_line = -1
+    inside_rule = False  # Tracks whether we're inside a rule block
 
-    for line_number, line in enumerate(lines, start=1):
-        if error_line == -1:
-            if re.search(r'\((\d+)\)', error_message):
-                error_match = re.search(r'\((\d+)\)', error_message)
-                error_line = int(error_match.group(1))
-
-        if error_line == -1:
-            modified_lines.append(line)
+    for line in lines:
+        if line.strip().startswith('}'):
+            inside_rule = False
+            modified_lines.append(f'// {line.strip()}')
+        elif inside_rule:
+            modified_lines.append(f'// {line.strip()}')
+        elif line.strip().startswith('rule'):
+            inside_rule = True
         else:
-            if line_number == error_line:
-                modified_lines.append(f'// {line.strip()}')
-                print(f'Processed Line {line_number}: {line.strip()}')
-            elif line.strip() == "}":
-                error_line = -1
-                modified_lines.append(line)
-            else:
-                modified_lines.append(f'// {line.strip()}')
+            modified_lines.append(line)
 
-    # Create a backup file with a ".bak" extension
-    backup_file_path = file_path + '.bak'
-    with open(backup_file_path, 'w', encoding='utf-8') as f:
-        f.writelines(lines)
-
-    # Overwrite the original file with the modified content
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
 
@@ -48,7 +35,6 @@ while True:
             if file.endswith('.yar'):
                 file_path = os.path.join(root, file)
 
-                # Use YARA Python library to validate the rule file
                 try:
                     rules = yara.compile(filepath=file_path)
                 except yara.SyntaxError as e:
