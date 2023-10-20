@@ -1,10 +1,11 @@
 import os
 import yara
 import re
-from multiprocessing import Pool
+from concurrent.futures import ThreadPoolExecutor
 
 # Directory containing YARA rules
 yara_directory = 'YARA'
+batch_size = 10
 
 def comment_out_errors(file_path, error_message):
     with open(file_path, 'r', encoding='ISO-8859-1') as f:
@@ -12,7 +13,7 @@ def comment_out_errors(file_path, error_message):
 
     modified_lines = []
 
-    # Extract the line number from the error message using regular expression
+    # Extract the line number from the error message using a faster regular expression
     error_match = re.search(r'\((\d+)\)', error_message)
     error_line = int(error_match.group(1) if error_match else -1)
 
@@ -39,18 +40,20 @@ def process_yara_file(file_path):
 if __name__ == "__main__":
     while True:
         errors_found = False
-        pool = Pool(processes=os.cpu_count())  # Use as many processes as CPU cores
+        file_paths = []
 
         for root, _, files in os.walk(yara_directory):
             for file in files:
                 if file.endswith('.yar'):
-                    file_path = os.path.join(root, file)
-                    result = pool.apply_async(process_yara_file, (file_path,))
-                    if result.get():
-                        errors_found = True
+                    file_paths.append(os.path.join(root, file))
 
-        pool.close()
-        pool.join()
+        batched_file_paths = [file_paths[i:i + batch_size] for i in range(0, len(file_paths), batch_size)]
+
+        with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
+            results = list(executor.map(process_yara_file, file_paths))
+        
+        if any(results):
+            errors_found = True
 
         if not errors_found:
             break
