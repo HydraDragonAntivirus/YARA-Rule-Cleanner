@@ -6,7 +6,7 @@ import re
 yara_directory = 'YARA'
 
 def comment_out_errors(file_path, error_message):
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, 'r', encoding='ISO-8859-1') as f:  # Open with ISO-8859-1 encoding
         lines = f.readlines()
 
     modified_lines = []
@@ -15,34 +15,23 @@ def comment_out_errors(file_path, error_message):
     error_match = re.search(r'\((\d+)\)', error_message)
     error_line = int(error_match.group(1) if error_match else -1)
 
-    inside_rule = False
-
     for line_number, line in enumerate(lines, start=1):
-        if 'rule ' in line:
-            inside_rule = True
-            modified_lines.append(line)  # Include the 'rule' line
-
-        if inside_rule:
-            modified_lines.append(f'// {line.strip()}')  # Comment out lines within the rule
-
-        if inside_rule and '}' in line:
-            inside_rule = False
-
-        # Check if we're at the error line, and set a flag to stop commenting
         if line_number == error_line:
-            inside_rule = False
-            modified_lines[-1] = f'// {lines[error_line - 1].strip()}'  # Comment out the 'rule' line
+            modified_lines.append(f'// {line.strip()}  // Error: {error_message}')
+            print(f'Processed Line {line_number}: {line.strip()}')
+        else:
+            modified_lines.append(line)
 
-    with open(file_path, 'w', encoding='utf-8') as f:
+    with open(file_path, 'w', encoding='ISO-8859-1') as f:  # Write back with the same encoding
         f.writelines(modified_lines)
 
-# Process all ".yara" files in the specified directory
+# Process all ".yar" files in the specified directory
 while True:
     errors_found = False
 
     for root, _, files in os.walk(yara_directory):
         for file in files:
-            if file.endswith('.yara'):
+            if file.endswith('.yar'):
                 file_path = os.path.join(root, file)
 
                 # Use YARA Python library to validate the rule file
