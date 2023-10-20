@@ -6,7 +6,7 @@ import re
 yara_directory = 'YARA'
 
 def comment_out_errors(file_path, error_message):
-    with open(file_path, 'r', encoding='ISO-8859-1') as f:  # Open with ISO-8859-1 encoding
+    with open(file_path, 'r', encoding='ISO-8859-1') as f:
         lines = f.readlines()
 
     modified_lines = []
@@ -17,12 +17,12 @@ def comment_out_errors(file_path, error_message):
 
     for line_number, line in enumerate(lines, start=1):
         if line_number == error_line:
-            modified_lines.append(f'// {line.strip()}  // Error: {error_message}')
+            modified_lines.append(f'// {line.strip()}')
             print(f'Processed Line {line_number}: {line.strip()}')
         else:
             modified_lines.append(line)
 
-    with open(file_path, 'w', encoding='ISO-8859-1') as f:  # Write back with the same encoding
+    with open(file_path, 'w', encoding='ISO-8859-1') as f:
         f.writelines(modified_lines)
 
 # Process all ".yar" files in the specified directory
