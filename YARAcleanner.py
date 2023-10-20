@@ -11,25 +11,26 @@ def comment_out_entire_rule(file_path):
     modified_lines = []
 
     in_rule_block = False
-    error_found = False  # Hata bulunduğunda yorum satırına eklemek için bayrak
+    rule_text = []
     for line in lines:
         if line.strip().startswith("rule "):
             in_rule_block = True
-            error_found = False
+            rule_text = []
 
         if in_rule_block:
-            if not error_found:
-                modified_lines.append(line)
-            else:
-                modified_lines.append(f'// {line}')
-        else:
-            modified_lines.append(line)
+            rule_text.append(line)
 
         if line.strip() == "}":
             in_rule_block = False
-
-        if line.strip().startswith('// error:'):
-            error_found = True
+            rule_text.append(line)
+            rule_content = ''.join(rule_text)
+            try:
+                rules = yara.compile(source=rule_content)
+                modified_lines.append(rule_content)
+            except yara.SyntaxError as e:
+                modified_lines.append(f'// {rule_content}\n// Error: {str(e)}')
+        else:
+            modified_lines.append(line)
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
