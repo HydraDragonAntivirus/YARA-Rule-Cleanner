@@ -5,10 +5,7 @@ import re
 # Directory containing YARA rules
 yara_directory = 'YARA'
 
-def comment_out_rule(file_path, rule_name):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-
+def comment_out_rule(file_path, rule_name, lines):
     modified_lines = []
     in_rule_block = False
 
@@ -46,9 +43,11 @@ while True:
                     
                     if error_line > 0:
                         # Extract the rule name
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            lines = f.readlines()
                         rule_name = re.search(r'rule (\S+)', lines[error_line - 1]).group(1)
                     
-                        comment_out_rule(file_path, rule_name)
+                        comment_out_rule(file_path, rule_name, lines)
                         print(f'Processed: {file_path} - Error message: {error_message}')
                         errors_found = True
 
