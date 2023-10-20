@@ -1,25 +1,35 @@
 import os
 import yara
-import re
 
 # Directory containing YARA rules
 yara_directory = 'YARA'
 
-def comment_out_rule(file_path, rule_name, lines):
-    modified_lines = []
-    in_rule_block = False
+def comment_out_entire_rule(file_path):
+    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        lines = f.readlines()
 
+    modified_lines = []
+
+    in_rule_block = False
+    error_found = False  # Hata bulunduğunda yorum satırına eklemek için bayrak
     for line in lines:
-        if line.strip().startswith("rule " + rule_name):
+        if line.strip().startswith("rule "):
             in_rule_block = True
+            error_found = False
 
         if in_rule_block:
-            modified_lines.append(f'// {line.strip()}')
+            if not error_found:
+                modified_lines.append(line)
+            else:
+                modified_lines.append(f'// {line}')
         else:
             modified_lines.append(line)
 
         if line.strip() == "}":
             in_rule_block = False
+
+        if line.strip().startswith('// error:'):
+            error_found = True
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
@@ -37,19 +47,9 @@ while True:
                 try:
                     rules = yara.compile(filepath=file_path)
                 except yara.SyntaxError as e:
-                    error_message = str(e)
-                    error_match = re.search(r'\((\d+)\)', error_message)
-                    error_line = int(error_match.group(1) if error_match else -1)
-                    
-                    if error_line > 0:
-                        # Extract the rule name
-                        with open(file_path, 'r', encoding='utf-8') as f:
-                            lines = f.readlines()
-                        rule_name = re.search(r'rule (\S+)', lines[error_line - 1]).group(1)
-                    
-                        comment_out_rule(file_path, rule_name, lines)
-                        print(f'Processed: {file_path} - Error message: {error_message}')
-                        errors_found = True
+                    comment_out_entire_rule(file_path)
+                    print(f'Processed: {file_path} - Error message: {str(e)}')
+                    errors_found = True
 
     if not errors_found:
         break
