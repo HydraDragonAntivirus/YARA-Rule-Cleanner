@@ -10,7 +10,8 @@ def comment_out_errors(file_path, error_message):
     with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
-    error_line = int(re.search(r'\((\d+)\)', error_message).group(1))
+    error_line_match = re.search(r'\((\d+)\)', error_message)
+    error_line = int(error_line_match.group(1)) if error_line_match else -1
 
     modified_lines = []
     comment_started = False
@@ -49,7 +50,7 @@ def process_file(file_path):
         return True
     return False
 
-# Process all ".yar' files in the specified directory using parallel processing
+# Process all ".yar" files in the specified directory using parallel processing
 while True:
     errors_found = False
     with ProcessPoolExecutor() as executor:
