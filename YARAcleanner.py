@@ -10,7 +10,7 @@ def comment_out_errors(file_path, error_message):
     with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
-    error_line = int(re.search(r'\((\d+)\)', error_message).group(1)
+    error_line = int(re.search(r'\((\d+)\)', error_message).group(1))  # Added a missing closing parenthesis here
 
     modified_lines = []
     comment_added = False
