@@ -4,11 +4,9 @@ import re
 
 # Directory containing YARA rules
 yara_directory = 'YARA'
-
 def comment_out_errors(file_path, error_message):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-
+    with open(file_path, 'rb') as f:
+        lines = f.read().decode('utf-8', 'ignore').splitlines()
     modified_lines = []
 
     # Extract the line number from the error message using regular expression
@@ -17,24 +15,19 @@ def comment_out_errors(file_path, error_message):
 
     for line_number, line in enumerate(lines, start=1):
         if line_number == error_line:
-            if not line.strip().startswith('//'):
-                # Comment out the line that caused the error
-                modified_lines.append(f'// {line.strip()}')
+            if line.strip().startswith('//'):
+                # If the line causing an error already starts with '//',
+                # add '//' to the line above it instead
+                modified_lines[-1] = f'// {modified_lines[-1].strip()}'
+                print(f'Processed Line {line_number - 1}: {modified_lines[-1]}')
             else:
-                modified_lines.append(line)  # Leave the line as it is
-            print(f'Processed Line {line_number}: {line.strip()}')
-        elif line_number == error_line - 1:
-            if not line.strip().startswith('//'):
-                # Add a comment marker to the line above the error line
                 modified_lines.append(f'// {line.strip()}')
-            else:
-                modified_lines.append(line)  # Leave the line as it is
+                print(f'Processed Line {line_number}: {line.strip()}')
         else:
             modified_lines.append(line)
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
-
 # Process all ".yar" files in the specified directory
 while True:
     errors_found = False
