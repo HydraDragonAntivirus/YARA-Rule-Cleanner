@@ -1,7 +1,6 @@
 import os
 import yara
 import re
-from multiprocessing import Pool
 
 # Directory containing YARA rules
 yara_directory = 'YARA'
@@ -46,7 +45,7 @@ def process_yara_file(file_path):
 if __name__ == '__main__':
     # Process all ".yar" files in parallel
     yara_files = [os.path.join(root, file) for root, _, files in os.walk(yara_directory) for file in files if file.endswith('.yar')]
-    with Pool(processes=os.cpu_count()) as pool:
-        pool.map(process_yara_file, yara_files)
+    for file_path in yara_files:
+        process_yara_file(file_path)
 
     print('YARA rules processed successfully.')
