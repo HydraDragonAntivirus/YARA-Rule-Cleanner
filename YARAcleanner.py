@@ -51,7 +51,7 @@ if __name__ == '__main__':
             errors_found = False
 
             for root, _, files in os.walk(yara_directory):
-                yara_files = [os.path.join(root, file) for file in files if file.endswith('.yara')]
+                yara_files = [os.path.join(root, file) for file in files if file.endswith('.yaa')]
                 results = list(executor.map(process_yara_file, yara_files))
                 if any(results):
                     errors_found = True
