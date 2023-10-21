@@ -13,22 +13,17 @@ def comment_out_errors(file_path, error_message):
     error_line = int(re.search(r'\((\d+)\)', error_message).group(1))
 
     modified_lines = []
-    comment_added = False
+    comment_started = False
+
     for line_number, line in enumerate(lines, start=1):
-        if line_number == error_line - 1:
-            if not line.strip().startswith('//'):
-                modified_lines.append(f'// {line.strip()}')
-                comment_added = True
-            else:
-                modified_lines.append(line)
+        if comment_started:
+            if line.strip().startswith('}'):
+                comment_started = False
+            modified_lines.append(f'// {line.strip()}')
         elif line_number == error_line:
             if not line.strip().startswith('//'):
                 modified_lines.append(f'// {line.strip()}')
-            else:
-                modified_lines.append(line)
-        elif line_number == error_line + 1 and comment_added:
-            if not line.strip().startswith('//'):
-                modified_lines.append(f'// {line.strip()}')
+                comment_started = True
             else:
                 modified_lines.append(line)
         else:
@@ -54,7 +49,7 @@ def process_file(file_path):
         return True
     return False
 
-# Process all ".yar" files in the specified directory using parallel processing
+# Process all ".yar' files in the specified directory using parallel processing
 while True:
     errors_found = False
     with ProcessPoolExecutor() as executor:
