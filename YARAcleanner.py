@@ -43,7 +43,7 @@ if __name__ == "__main__":
         with ThreadPoolExecutor() as executor:
             for root, _, files in os.walk(yara_directory):
                 for file in files:
-                    if file.endswith('.yara'):
+                    if file.endswith('.yar'):
                         file_path = os.path.join(root, file)
                         if process_yara_file(file_path):
                             errors_found = True
