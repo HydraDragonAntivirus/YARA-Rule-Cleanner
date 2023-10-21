@@ -5,43 +5,45 @@ import re
 # Directory containing YARA rules
 yara_directory = 'YARA'
 
-def comment_out_errors(file_path, error_message, error_line):
+def comment_out_errors(file_path, error_messages):
     with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
     modified_lines = []
 
-    for line_number, line in enumerate(lines, start=1):
-        if line_number == error_line:
-            modified_lines.append(f'// {line.strip()}')
-            print(f'Processed Line {line_number}: {line.strip()}')
-        else:
-            modified_lines.append(line)
+    for error_message in error_messages:
+        error_line = 0  # Initialize error line number
+
+        # Extract the line number from the error message using regular expression
+        error_match = re.search(r'\((\d+)\)', error_message)
+        if error_match:
+            error_line = int(error_match.group(1))
+
+        for line_number, line in enumerate(lines, start=1):
+            if line_number == error_line:
+                modified_lines.append(f'// {line.strip()}')
+                print(f'Processed Line {line_number}: {line.strip()}')
+            else:
+                modified_lines.append(line)
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
 
 # Process all ".yar" files in the specified directory
-while True:
-    errors_found = False
+for root, _, files in os.walk(yara_directory):
+    for file in files:
+        if file.endswith('.yar'):
+            file_path = os.path.join(root, file)
+            error_messages = []
 
-    for root, _, files in os.walk(yara_directory):
-        for file in files:
-            if file.endswith('.yar'):
-                file_path = os.path.join(root, file)
-
-                # Use YARA Python library to validate the rule file
+            while True:
                 try:
                     rules = yara.compile(filepath=file_path)
+                    break  # No error, so exit the loop
                 except yara.SyntaxError as e:
-                    error_message = str(e)
-                    error_match = re.search(r'line (\d+)', error_message)
-                    error_line = int(error_match.group(1) if error_match else -1)
-                    comment_out_errors(file_path, error_message, error_line)
-                    print(f'Processed: {file_path} - Error message: {error_message}')
-                    errors_found = True
-
-    if not errors_found:
-        break
+                    error_messages.append(str(e))
+                    comment_out_errors(file_path, error_messages)
+                    print(f'Processed: {file_path} - Error messages: {error_messages}')
+                    error_messages = []
 
 print('YARA rules processed successfully.')
