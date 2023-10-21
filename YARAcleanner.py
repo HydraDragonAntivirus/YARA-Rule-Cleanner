@@ -49,11 +49,11 @@ def process_file(file_path):
         return True
     return False
 
-# Process all ".yara" files in the specified directory using parallel processing
+# Process all ".yar" files in the specified directory using parallel processing
 while True:
     errors_found = False
     with ProcessPoolExecutor() as executor:
-        file_paths = [os.path.join(root, file) for root, _, files in os.walk(yara_directory) for file in files if file.endswith('.yara')]
+        file_paths = [os.path.join(root, file) for root, _, files in os.walk(yara_directory) for file in files if file.endswith('.yar')]
         error_results = list(executor.map(process_file, file_paths))
         if any(error_results):
             errors_found = True
