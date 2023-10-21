@@ -26,6 +26,11 @@ def comment_out_errors(file_path, error_message):
                 modified_lines.append(f'// {line.strip()}')
             else:
                 modified_lines.append(line)
+        elif line_number == error_line + 1 and comment_added:
+            if not line.strip().startswith('//'):
+                modified_lines.append(f'// {line.strip()}')
+            else:
+                modified_lines.append(line)
         else:
             modified_lines.append(line)
 
