@@ -10,13 +10,22 @@ def comment_out_errors(file_path, error_message):
     with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
-    error_line = int(re.search(r'\((\d+)\)', error_message).group(1))
+    error_line = int(re.search(r'\((\d+)\)', error_message).group(1)
 
     modified_lines = []
+    comment_added = False
     for line_number, line in enumerate(lines, start=1):
-        if line_number == error_line:
-            modified_lines.append(f'// {line.strip()}')
-            print(f'Processed Line {line_number}: {line.strip()}')
+        if line_number == error_line - 1:
+            if not line.strip().startswith('//'):
+                modified_lines.append(f'// {line.strip()}')
+                comment_added = True
+            else:
+                modified_lines.append(line)
+        elif line_number == error_line:
+            if not line.strip().startswith('//'):
+                modified_lines.append(f'// {line.strip()}')
+            else:
+                modified_lines.append(line)
         else:
             modified_lines.append(line)
 
