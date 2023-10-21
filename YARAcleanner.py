@@ -17,8 +17,18 @@ def comment_out_errors(file_path, error_message):
 
     for line_number, line in enumerate(lines, start=1):
         if line_number == error_line:
-            modified_lines.append(f'// {line.strip()}')
+            if not line.strip().startswith('//'):
+                # Comment out the line that caused the error
+                modified_lines.append(f'// {line.strip()}')
+            else:
+                modified_lines.append(line)  # Leave the line as it is
             print(f'Processed Line {line_number}: {line.strip()}')
+        elif line_number == error_line - 1:
+            if not line.strip().startswith('//'):
+                # Add a comment marker to the line above the error line
+                modified_lines.append(f'// {line.strip()}')
+            else:
+                modified_lines.append(line)  # Leave the line as it is
         else:
             modified_lines.append(line)
 
