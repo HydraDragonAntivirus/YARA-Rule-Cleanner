@@ -1,6 +1,7 @@
 import os
 import yara
 import re
+from multiprocessing import Pool
 
 # Directory containing YARA rules
 yara_directory = 'YARA'
@@ -29,21 +30,23 @@ def comment_out_errors(file_path, error_messages):
     with open(file_path, 'w', encoding='utf-8') as f:
         f.writelines(modified_lines)
 
-# Process all ".yar" files in the specified directory
-for root, _, files in os.walk(yara_directory):
-    for file in files:
-        if file.endswith('.yar'):
-            file_path = os.path.join(root, file)
+def process_yara_file(file_path):
+    error_messages = []
+
+    while True:
+        try:
+            rules = yara.compile(filepath=file_path)
+            break  # No error, so exit the loop
+        except yara.SyntaxError as e:
+            error_messages.append(str(e))
+            comment_out_errors(file_path, error_messages)
+            print(f'Processed: {file_path} - Error messages: {error_messages}')
             error_messages = []
 
-            while True:
-                try:
-                    rules = yara.compile(filepath=file_path)
-                    break  # No error, so exit the loop
-                except yara.SyntaxError as e:
-                    error_messages.append(str(e))
-                    comment_out_errors(file_path, error_messages)
-                    print(f'Processed: {file_path} - Error messages: {error_messages}')
-                    error_messages = []
+if __name__ == '__main__':
+    # Process all ".yar" files in parallel
+    yara_files = [os.path.join(root, file) for root, _, files in os.walk(yara_directory) for file in files if file.endswith('.yar')]
+    with Pool(processes=os.cpu_count()) as pool:
+        pool.map(process_yara_file, yara_files)
 
-print('YARA rules processed successfully.')
+    print('YARA rules processed successfully.')
