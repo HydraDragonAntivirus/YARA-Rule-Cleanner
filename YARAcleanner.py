@@ -34,7 +34,7 @@ def scan_and_process_yara_file(file_path):
         error_message = str(e)
         comment_out_errors(file_path, error_message)
         print(f'Processed: {file_path} - Error message: {error_message}')
-        return file_path  # Return the file path with an error
+        return file_path  # Return the file path if there was an error
 
 if __name__ == '__main':
     while True:
@@ -52,7 +52,6 @@ if __name__ == '__main':
         pool.close()
         pool.join()
 
-        if not any(error_files):
-            break  # If there are no errors, exit the loop
-
-    print('YARA rules processed successfully.')
+        if not error_files:
+            print('All YARA rules processed successfully.')
+            break
