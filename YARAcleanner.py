@@ -6,7 +6,7 @@ import re
 yara_directory = 'YARA'
 
 def comment_out_errors(file_path, error_messages):
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
         lines = f.readlines()
 
     modified_lines = []
