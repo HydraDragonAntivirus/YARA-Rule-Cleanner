@@ -11,7 +11,7 @@ def comment_out_errors(file_path, error_messages):
 
     modified_lines = []
 
-    comment_previous_line = False
+    previous_line_commented = False
 
     for error_message in error_messages:
         error_line = 0  # Initialize error line number
@@ -24,14 +24,14 @@ def comment_out_errors(file_path, error_messages):
         for line_number, line in enumerate(lines, start=1):
             if line_number == error_line:
                 if '//' in line:
-                    comment_previous_line = True
                     modified_lines.append(line)
+                    previous_line_commented = True
                 else:
-                    if comment_previous_line:
+                    if previous_line_commented:
                         modified_lines.append(f'// {line.strip()}')
                     else:
                         modified_lines.append(f'// {line.strip()}')
-                    comment_previous_line = False
+                    previous_line_commented = False
                 print(f'Processed Line {line_number}: {line.strip()}')
             else:
                 modified_lines.append(line)
