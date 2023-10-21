@@ -34,26 +34,25 @@ def scan_and_process_yara_file(file_path):
         error_message = str(e)
         comment_out_errors(file_path, error_message)
         print(f'Processed: {file_path} - Error message: {error_message}')
-        return True  # Return True if there was an error
-    return False
+        return file_path  # Return the file path with an error
 
 if __name__ == '__main':
-    yara_files = []
-
-    for root, _, files in os.walk(yara_directory):
-        for file in files:
-            if file.endswith('.yar'):
-                file_path = os.path.join(root, file)
-                yara_files.append(file_path)
-
     while True:
+        yara_files = []
+
+        for root, _, files in os.walk(yara_directory):
+            for file in files:
+                if file.endswith('.yar'):
+                    file_path = os.path.join(root, file)
+                    yara_files.append(file_path)
+
         num_cpus = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(processes=num_cpus)
-        errors_found = any(pool.map(scan_and_process_yara_file, yara_files))
+        error_files = pool.map(scan_and_process_yara_file, yara_files)
         pool.close()
         pool.join()
 
-        if not errors_found:
-            break
+        if not any(error_files):
+            break  # If there are no errors, exit the loop
 
     print('YARA rules processed successfully.')
