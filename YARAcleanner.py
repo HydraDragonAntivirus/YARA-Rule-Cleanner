@@ -2,7 +2,7 @@ import os
 import yara
 import re
 import codecs
-import multiprocessing
+from concurrent.futures import ProcessPoolExecutor
 
 # Directory containing YARA rules
 yara_directory = 'YARA'
@@ -34,24 +34,30 @@ def scan_and_process_yara_file(file_path):
         error_message = str(e)
         comment_out_errors(file_path, error_message)
         print(f'Processed: {file_path} - Error message: {error_message}')
-        return file_path  # Return the file path if there was an error
+        return True  # Indicate an error was found
+    return False
 
-if __name__ == '__main':
-    while True:
+# Process all ".yara" files in the specified directory using multiprocessing
+while True:
+    errors_found = False
+
+    with ProcessPoolExecutor() as executor:
         yara_files = []
 
         for root, _, files in os.walk(yara_directory):
             for file in files:
-                if file.endswith('.yar'):
+                if file.endswith('.yara'):
                     file_path = os.path.join(root, file)
                     yara_files.append(file_path)
 
-        num_cpus = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=num_cpus)
-        error_files = pool.map(scan_and_process_yara_file, yara_files)
-        pool.close()
-        pool.join()
+        # Submit file processing tasks and check for errors
+        error_results = list(executor.map(scan_and_process_yara_file, yara_files))
 
-        if not error_files:
-            print('All YARA rules processed successfully.')
-            break
+        # Check if any errors were found
+        if any(error_results):
+            errors_found = True
+
+    if not errors_found:
+        break
+
+print('YARA rules processed successfully.')
