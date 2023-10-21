@@ -10,7 +10,7 @@ def comment_out_errors(file_path, error_message):
     with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
-    error_line = int(re.search(r'\((\d+)\)', error_message).group(1))  # Added a missing closing parenthesis here
+    error_line = int(re.search(r'\((\d+)\)', error_message).group(1))
 
     modified_lines = []
     comment_added = False
@@ -49,11 +49,11 @@ def process_file(file_path):
         return True
     return False
 
-# Continue processing until no errors are found
+# Process all ".yara" files in the specified directory using parallel processing
 while True:
     errors_found = False
     with ProcessPoolExecutor() as executor:
-        file_paths = [os.path.join(root, file) for root, _, files in os.walk(yara_directory) for file in files if file.endswith('.yar')]
+        file_paths = [os.path.join(root, file) for root, _, files in os.walk(yara_directory) for file in files if file.endswith('.yara')]
         error_results = list(executor.map(process_file, file_paths))
         if any(error_results):
             errors_found = True
